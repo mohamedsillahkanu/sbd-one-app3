@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>SBD ITN System — ICF-SL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     SPLASH / ROLE SELECTION / LOGIN
+══════════════════════════════════════════ -->
+<div class="screen active" id="splash">
+  <div style="width:100%;max-width:440px;margin:auto;padding:30px 20px 40px;">
+    <div class="spl-logo">
+      <img src="https://github.com/mohamedsillahkanu/gdp-dashboard-2/raw/6c7463b0d5c3be150aafae695a4bcbbd8aeb1499/ICF-SL.jpg" alt="ICF-SL" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <span class="spl-logo-txt" style="display:none;">ICF</span>
+    </div>
+    <div class="spl-title">SBD ITN SYSTEM</div>
+    <div class="spl-sub">SCHOOL-BASED DISTRIBUTION · SIERRA LEONE</div>
+
+    <div style="font-family:'Oswald',sans-serif;font-size:10px;font-weight:600;letter-spacing:2px;color:rgba(255,255,255,.5);margin-bottom:12px;text-align:center;">SELECT YOUR ROLE</div>
+    <div class="role-grid" id="roleGrid">
+
+      <div class="role-btn" onclick="selectRole('dhmt')" data-role="dhmt">
+        <div class="ri">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6">
+            <path d="M3 21h18M3 7l9-4 9 4M4 7v14M20 7v14M9 21V12h6v9M8 7h.01M12 7h.01M16 7h.01"/>
+          </svg>
+        </div>
+        <div class="rl">DHMT</div>
+        <div class="rd">District Officer</div>
+      </div>
+
+      <div class="role-btn" onclick="selectRole('phu')" data-role="phu">
+        <div class="ri">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6">
+            <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>
+            <line x1="12" y1="8" x2="12" y2="13"/><line x1="9.5" y1="10.5" x2="14.5" y2="10.5"/>
+          </svg>
+        </div>
+        <div class="rl">PHU STAFF</div>
+        <div class="rd">Health Facility</div>
+      </div>
+
+      <div class="role-btn" onclick="selectRole('driver')" data-role="driver">
+        <div class="ri">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6">
+            <rect x="1" y="3" width="15" height="13" rx="2"/>
+            <path d="M16 8h4l3 4v4h-7V8z"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+        </div>
+        <div class="rl">DRIVER</div>
+        <div class="rd">Transport</div>
+      </div>
+
+      <div class="role-btn" onclick="selectRole('distributor')" data-role="distributor">
+        <div class="ri">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6">
+            <path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <div class="rl">DISTRIBUTOR</div>
+        <div class="rd">School Distribution</div>
+      </div>
+
+    </div>
+
+    <div class="login-box">
+      <div style="font-family:'Oswald',sans-serif;font-size:10px;font-weight:600;letter-spacing:2px;color:rgba(255,255,255,.5);margin-bottom:14px;text-align:center;">CREDENTIALS</div>
+      <div class="spl-err" id="splErr"></div>
+      <label class="lbl">Username</label>
+      <input class="inp" type="text" id="loginUser" placeholder="Enter username" autocomplete="off">
+      <label class="lbl">Password</label>
+      <input class="inp" type="password" id="loginPass" placeholder="••••••••">
+      <button class="big-btn gold" onclick="doLogin()" style="margin-top:4px;">SIGN IN →</button>
+      <div style="text-align:center;margin-top:12px;font-size:10px;color:rgba(255,255,255,.35);">Demo: any username / password <strong style="color:rgba(255,255,255,.5);">1234</strong></div>
+    </div>
+
+    <div class="partners-row">
+      <span class="part-badge">MoHS</span>
+      <span class="part-badge">NMCP</span>
+      <span class="part-badge">PMI Evolve</span>
+      <span class="part-badge">ICF-SL</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DHMT SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-dhmt">
+  <div class="topbar">
+    <div class="topbar-info">
+      <div class="topbar-title">DHMT — DISTRICT STORE</div>
+      <div class="topbar-sub" id="dhmt-user-sub">Loading...</div>
+    </div>
+    <div class="topbar-avatar" onclick="doLogout()" title="Logout" id="dhmt-avatar">DH</div>
+  </div>
+  <div class="content">
+    <div class="dash-hdr">
+      <div class="dash-hdr-wave"></div><div class="dash-hdr-wave2"></div>
+      <div class="dh-role">DHMT DISTRICT OFFICER</div>
+      <div class="dh-name" id="dhmt-name">—</div>
+      <div class="dh-loc" id="dhmt-loc">Kono District</div>
+    </div>
+    <div class="stat-row" style="margin-top:14px;">
+      <div class="stat-box navy"><div class="stat-n" id="dStat1">0</div><div class="stat-l">Total Dispatch</div></div>
+      <div class="stat-box green"><div class="stat-n" id="dStat2">0</div><div class="stat-l">Received</div></div>
+      <div class="stat-box orange"><div class="stat-n" id="dStat3">0</div><div class="stat-l">In Transit</div></div>
+      <div class="stat-box gold"><div class="stat-n" id="dStat4">0</div><div class="stat-l">District Stock</div></div>
+    </div>
+    <div class="card">
+      <div class="menu-item" onclick="showScreen('scr-dhmt-dispatch')">
+        <div class="menu-ico navy"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+        <div class="menu-txt"><div class="menu-title">New ITN Dispatch</div><div class="menu-desc">Send ITNs to PHU with driver agreement</div></div>
+        <div class="menu-arr">›</div>
+      </div>
+      <div class="menu-item" onclick="showScreen('scr-dhmt-records')">
+        <div class="menu-ico gold"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <div class="menu-txt"><div class="menu-title">Dispatch Records</div><div class="menu-desc" id="dhmt-records-sub">View all dispatches & status</div></div>
+        <div class="menu-arr">›</div>
+      </div>
+      <div class="menu-item" onclick="showScreen('scr-dhmt-stock')">
+        <div class="menu-ico teal"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div>
+        <div class="menu-txt"><div class="menu-title">District Stock Management</div><div class="menu-desc">View and update district ITN store</div></div>
+        <div class="menu-arr">›</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DHMT NEW DISPATCH
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-dhmt-dispatch">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('scr-dhmt')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title">NEW DISPATCH</div><div class="topbar-sub">Complete all steps</div></div>
+  </div>
+  <div class="content">
+    <div class="steps" id="dispatch-steps">
+      <div class="step cur" id="dstep1"><div class="step-dot">1</div><div class="step-lbl">Details</div></div>
+      <div class="step" style="flex:0;"><div style="width:30px;height:3px;background:#ddd;margin-top:12px;"></div></div>
+      <div class="step" id="dstep2"><div class="step-dot">2</div><div class="step-lbl">Driver QR</div></div>
+      <div class="step" style="flex:0;"><div style="width:30px;height:3px;background:#ddd;margin-top:12px;"></div></div>
+      <div class="step" id="dstep3"><div class="step-dot">3</div><div class="step-lbl">Consent</div></div>
+      <div class="step" style="flex:0;"><div style="width:30px;height:3px;background:#ddd;margin-top:12px;"></div></div>
+      <div class="step" id="dstep4"><div class="step-dot">4</div><div class="step-lbl">Submit</div></div>
+    </div>
+
+    <!-- Step 1 -->
+    <div id="dp-step1">
+      <div class="fsec">DISPATCH DETAILS</div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Date</label><input class="fi" id="dp-date" readonly></div>
+        <div class="fg"><label class="fl">Time</label><input class="fi" id="dp-time" readonly></div>
+      </div>
+      <div class="fg"><label class="fl">DHMT Officer</label><input class="fi" id="dp-officer" readonly></div>
+      <div class="fg"><label class="fl">Destination PHU <span style="color:var(--red)">*</span></label>
+        <select class="fsel" id="dp-dest"><option value="">— Select PHU —</option></select>
+      </div>
+      <div class="fsec">ITN QUANTITIES</div>
+      <div class="frow">
+        <div class="fg"><label class="fl">PBO ITNs</label><input class="fi" id="dp-pbo" type="number" min="0" value="0" oninput="calcDpTotal()"></div>
+        <div class="fg"><label class="fl">IG2 ITNs</label><input class="fi" id="dp-ig2" type="number" min="0" value="0" oninput="calcDpTotal()"></div>
+      </div>
+      <div class="card" style="margin-bottom:12px;background:var(--navy-l);border:2px solid var(--navy);">
+        <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
+          <span style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:600;color:var(--navy);letter-spacing:.8px;">TOTAL ITNs</span>
+          <span style="font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;color:var(--navy);" id="dp-total">0</span>
+        </div>
+      </div>
+      <div class="ferr" id="err-dp-stock" style="display:none;margin-bottom:10px;"></div>
+      <div class="fsec">VEHICLE &amp; DRIVER</div>
+      <div class="fg"><label class="fl">Vehicle Number <span style="color:var(--red)">*</span></label><input class="fi" id="dp-vehicle" placeholder="e.g. SLE-1234"></div>
+      <div class="fg"><label class="fl">Driver Name <span style="color:var(--red)">*</span></label><input class="fi" id="dp-driver" placeholder="Driver full name"></div>
+      <div class="fg"><label class="fl">Driver Phone <span style="color:var(--red)">*</span></label><input class="fi" id="dp-driver-tel" placeholder="9-digit number" type="tel" maxlength="9"></div>
+      <button class="btn navy full" onclick="dpNext1()" style="margin-top:6px;">
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>NEXT: DRIVER AGREEMENT
+      </button>
+    </div>
+
+    <!-- Step 2: Driver QR -->
+    <div id="dp-step2" style="display:none;">
+      <div class="alert info">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <div class="alert-txt"><strong>DRIVER ID VERIFICATION</strong><span>Ask the driver to show their QR ID card. Scan it to confirm identity and get consent.</span></div>
+      </div>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-hdr blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="4" height="4"/></svg>
+          <span class="card-htitle">SCAN DRIVER QR ID CARD</span>
+        </div>
+        <div class="card-body">
+          <div id="dp-scan-overlay" style="text-align:center;padding:20px 0;">
+            <svg style="width:56px;height:56px;stroke:var(--gold-d);fill:none;margin-bottom:10px;" viewBox="0 0 24 24" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="4" height="4"/></svg>
+            <p style="font-size:13px;color:var(--text-s);margin-bottom:14px;">Point camera at driver's QR ID card</p>
+            <button class="btn gold" onclick="startQR('qr-reader','onDriverScan')">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>SCAN QR
+            </button>
+          </div>
+          <div class="scanner-wrap" id="dp-scanner-wrap" style="display:none;">
+            <div class="scanner-overlay-ring"></div>
+            <div id="qr-reader"></div>
+          </div>
+          <div style="text-align:center;display:none;" id="dp-stop-btn">
+            <button class="btn red" style="margin-top:10px;" onclick="stopQR('qr-reader')">STOP SCANNER</button>
+          </div>
+        </div>
+      </div>
+      <div id="dp-driver-info" style="display:none;" class="fade-in">
+        <div class="card" style="border:2px solid var(--green);margin-bottom:12px;">
+          <div class="card-hdr green">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span class="card-htitle">DRIVER VERIFIED</span>
+          </div>
+          <div class="card-body">
+            <div class="frow">
+              <div><div class="fl">Name</div><div id="dr-name-display" style="font-weight:700;font-size:15px;"></div></div>
+              <div><div class="fl">Phone</div><div id="dr-phone-display" style="font-weight:700;font-size:15px;"></div></div>
+            </div>
+            <div style="margin-top:10px;padding:10px;background:var(--navy-l);border-radius:8px;">
+              <div class="fl" style="margin-bottom:6px;">DISPATCH SUMMARY FOR CONSENT</div>
+              <div class="summ-item"><span class="summ-k">Destination</span><span class="summ-v" id="dr-dest-display"></span></div>
+              <div class="summ-item"><span class="summ-k">PBO ITNs</span><span class="summ-v" id="dr-pbo-display"></span></div>
+              <div class="summ-item"><span class="summ-k">IG2 ITNs</span><span class="summ-v" id="dr-ig2-display"></span></div>
+              <div class="summ-item" style="border:none;"><span class="summ-k" style="font-weight:700;">TOTAL</span><span class="summ-v" style="font-size:18px;color:var(--navy);" id="dr-total-display"></span></div>
+            </div>
+            <div style="margin-top:12px;font-size:13px;color:var(--text-s);">Does the driver <strong>agree</strong> with the above quantity?</div>
+            <div class="btn-row" style="margin-top:10px;">
+              <button class="btn green" onclick="driverConsent(true)"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>YES — AGREE</button>
+              <button class="btn red" onclick="driverConsent(false)"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>NO — DISPUTE</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn gray" onclick="dpBack1()" style="margin-top:6px;">‹ Back to Details</button>
+    </div>
+
+    <!-- Step 3: Consent -->
+    <div id="dp-step3" style="display:none;">
+      <div id="dp-consent-agree" style="display:none;">
+        <div class="consent-box agree">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <div class="consent-title">DRIVER AGREED</div>
+          <div style="font-size:12px;margin-top:4px;color:var(--green-d);">Driver has confirmed and consented to the dispatch quantity</div>
+        </div>
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-body"><div class="fl" style="margin-bottom:8px;">FINAL DISPATCH SUMMARY</div><div id="dp-final-summary"></div></div>
+        </div>
+        <button class="btn green full" id="dp-finalize-btn" onclick="finalizeDispatch()">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>FINALIZE &amp; SUBMIT DISPATCH
+        </button>
+      </div>
+      <div id="dp-consent-disagree" style="display:none;">
+        <div class="consent-box disagree">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          <div class="consent-title">DRIVER DISPUTES</div>
+          <div style="font-size:12px;margin-top:4px;color:var(--red-d);">The driver does not agree. Please review the details.</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn outline-navy" onclick="dpBack1()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>REVIEW DETAILS</button>
+          <button class="btn gold" onclick="dpBack2()"><svg viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/></svg>RE-SCAN DRIVER</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Success -->
+    <div id="dp-step4" style="display:none;" class="fade-in">
+      <div style="text-align:center;padding:30px 20px;background:linear-gradient(135deg,var(--green-d),var(--green));border-radius:16px;color:#fff;margin-bottom:16px;">
+        <svg style="width:60px;height:60px;stroke:#fff;fill:none;stroke-width:1.5;margin-bottom:12px;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        <div style="font-family:'Oswald',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;">DISPATCH CONFIRMED</div>
+        <div style="font-size:13px;margin-top:6px;opacity:.85;" id="dp-success-msg"></div>
+      </div>
+      <div class="card" style="margin-bottom:12px;"><div class="card-body" id="dp-success-detail"></div></div>
+      <button class="btn navy full" onclick="showScreen('scr-dhmt')">← Back to Dashboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DHMT RECORDS
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-dhmt-records">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('scr-dhmt')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title">DISPATCH RECORDS</div><div class="topbar-sub">All dispatches & status</div></div>
+  </div>
+  <div class="content" id="dhmt-records-content"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DHMT STOCK
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-dhmt-stock">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('scr-dhmt')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title">DISTRICT STOCK</div><div class="topbar-sub">Manage ITN inventory</div></div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="card-hdr teal"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span class="card-htitle">CURRENT DISTRICT STOCK</span></div>
+      <div class="card-body">
+        <div class="stat-row">
+          <div class="stat-box navy"><div class="stat-n" id="dst-pbo">0</div><div class="stat-l">PBO ITNs</div></div>
+          <div class="stat-box teal"><div class="stat-n" id="dst-ig2">0</div><div class="stat-l">IG2 ITNs</div></div>
+          <div class="stat-box gold"><div class="stat-n" id="dst-total">0</div><div class="stat-l">Total Stock</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr green"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="card-htitle">ADD STOCK RECEIVED</span></div>
+      <div class="card-body">
+        <div class="frow">
+          <div class="fg"><label class="fl">PBO ITNs to Add</label><input class="fi" type="number" id="add-pbo" min="0" placeholder="0"></div>
+          <div class="fg"><label class="fl">IG2 ITNs to Add</label><input class="fi" type="number" id="add-ig2" min="0" placeholder="0"></div>
+        </div>
+        <div class="fg"><label class="fl">Source / Reference</label><input class="fi" id="add-source" placeholder="e.g. PMI Delivery #REF123"></div>
+        <button class="btn green full" onclick="addDistrictStock()">UPDATE STOCK</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr gold"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-6"/></svg><span class="card-htitle">STOCK LEDGER</span></div>
+      <div class="card-body" id="stock-ledger" style="padding:10px 16px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PHU SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-phu">
+  <div class="topbar">
+    <div class="topbar-info"><div class="topbar-title">PHU — HEALTH FACILITY</div><div class="topbar-sub" id="phu-user-sub">Loading...</div></div>
+    <div class="topbar-avatar" onclick="doLogout()" id="phu-avatar">PH</div>
+  </div>
+  <div class="content">
+    <div class="dash-hdr">
+      <div class="dash-hdr-wave"></div><div class="dash-hdr-wave2"></div>
+      <div class="dh-role">PHU INCHARGE</div>
+      <div class="dh-name" id="phu-name">—</div>
+      <div class="dh-loc" id="phu-facility">—</div>
+    </div>
+    <div class="stat-row" style="margin-top:14px;">
+      <div class="stat-box navy"><div class="stat-n" id="pStat1">0</div><div class="stat-l">PBO Stock</div></div>
+      <div class="stat-box teal"><div class="stat-n" id="pStat2">0</div><div class="stat-l">IG2 Stock</div></div>
+      <div class="stat-box green"><div class="stat-n" id="pStat3">0</div><div class="stat-l">Dispatched</div></div>
+      <div class="stat-box gold"><div class="stat-n" id="pStat4">0</div><div class="stat-l">Distributed</div></div>
+    </div>
+    <div class="card">
+      <div class="menu-item" onclick="showScreen('scr-phu-receive')">
+        <div class="menu-ico navy"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></div>
+        <div class="menu-txt"><div class="menu-title">Receive from DHMT</div><div class="menu-desc">Scan driver ID, verify & confirm receipt</div></div>
+        <div class="menu-arr">›</div>
+      </div>
+      <div class="menu-item" onclick="showScreen('scr-phu-dispatch')">
+        <div class="menu-ico green"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+        <div class="menu-txt"><div class="menu-title">Dispatch to Distributor</div><div class="menu-desc">Calculate & send ITNs to field distributor</div></div>
+        <div class="menu-arr">›</div>
+      </div>
+      <div class="menu-item" onclick="showScreen('scr-phu-return')">
+        <div class="menu-ico orange"><svg viewBox="0 0 24 24"><path d="M21 2v6h-6M3 12a9 9 0 0115.36-6.36L21 8M3 22v-6h6M21 12a9 9 0 01-15.36 6.36L3 16"/></svg></div>
+        <div class="menu-txt"><div class="menu-title">Receive Returns</div><div class="menu-desc">Verify end-of-day returns from distributor</div></div>
+        <div class="menu-arr">›</div>
+      </div>
+      <div class="menu-item" onclick="showScreen('scr-phu-stock')">
+        <div class="menu-ico teal"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div>
+        <div class="menu-txt"><div class="menu-title">PHU Stock Ledger</div><div class="menu-desc">Full stock history & movements</div></div>
+        <div class="menu-arr">›</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PHU RECEIVE FROM DHMT
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-phu-receive">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('scr-phu')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title">RECEIVE FROM DHMT</div><div class="topbar-sub">Scan driver, verify & confirm</div></div>
+  </div>
+  <div class="content">
+    <div class="alert info">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      <div class="alert-txt"><strong>INCOMING DELIVERY</strong><span>Scan the driver's QR ID card to retrieve dispatch details. Then count ITNs before confirming.</span></div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-hdr blue"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span class="card-htitle">SCAN DRIVER QR ID</span></div>
+      <div class="card-body">
+        <div id="recv-scan-overlay" style="text-align:center;padding:20px 0;">
+          <button class="btn gold" onclick="startQR('qr-reader2','onDriverScanRecv')">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>SCAN DRIVER ID
+          </button>
+        </div>
+        <div class="scanner-wrap" id="recv-scanner-wrap" style="display:none;"><div class="scanner-overlay-ring"></div><div id="qr-reader2"></div></div>
+        <div style="text-align:center;display:none;" id="recv-stop-btn"><button class="btn red" style="margin-top:10px;" onclick="stopQR('qr-reader2')">STOP</button></div>
+      </div>
+    </div>
+    <div id="recv-dispatch-info" style="display:none;" class="fade-in">
+      <div class="card" style="margin-bottom:12px;border:2px solid var(--navy);">
+        <div class="card-hdr blue"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8"/></svg><span class="card-htitle">DISPATCH DETAILS</span></div>
+        <div class="card-body"><div id="recv-dispatch-summary"></div></div>
+      </div>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-hdr orange"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span class="card-htitle">PHYSICAL COUNT</span></div>
+        <div class="card-body">
+          <div class="frow">
+            <div class="fg"><label class="fl">PBO Received</label><input class="fi" type="number" id="recv-pbo" min="0" placeholder="0" oninput="checkRecvMatch()"></div>
+            <div class="fg"><label class="fl">IG2 Received</label><input class="fi" type="number" id="recv-ig2" min="0" placeholder="0" oninput="checkRecvMatch()"></div>
+          </div>
+          <div id="recv-match-box" style="display:none;border-radius:9px;padding:10px 12px;margin-bottom:10px;font-size:12px;font-weight:600;"></div>
+          <div id="recv-shortage-section" style="display:none;">
+            <div class="alert warn">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+              <div class="alert-txt"><strong>SHORTAGE DETECTED</strong><span>Driver must scan ID again to acknowledge shortage responsibility.</span></div>
+            </div>
+            <div class="fg"><label class="fl">Shortage Note</label><textarea class="fi" id="recv-shortage-note" rows="2" placeholder="Describe the shortage..."></textarea></div>
+            <button class="btn orange full" onclick="scanDriverForShortage()">SCAN DRIVER ID — ACKNOWLEDGE SHORTAGE</button>
+          </div>
+          <button class="btn green full" id="recv-confirm-btn" onclick="confirmPHUReceipt()" disabled style="margin-top:6px;">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>CONFIRM RECEIPT
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PHU DISPATCH TO DISTRIBUTOR
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-phu-dispatch">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('scr-phu')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title">DISPATCH TO DISTRIBUTOR</div><div class="topbar-sub">Calculate & confirm</div></div>
+  </div>
+  <div class="content">
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-hdr teal"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span class="card-htitle">PHU STOCK AVAILABLE</span></div>
+      <div class="card-body">
+        <div class="stat-row">
+          <div class="stat-box navy"><div class="stat-n" id="phud-pbo-avail">0</div><div class="stat-l">PBO Available</div></div>
+          <div class="stat-box teal"><div class="stat-n" id="phud-ig2-avail">0</div><div class="stat-l">IG2 Available</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-hdr navy"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="card-htitle">SELECT DISTRIBUTOR</span></div>
+      <div class="card-body">
+        <div class="fg"><label class="fl">Distributor</label>
+          <select class="fsel" id="phud-dist" onchange="loadDistributorSchools()"><option value="">— Select Distributor —</option></select>
+        </div>
+        <div id="phud-schools-block" style="display:none;">
+          <div class="fsec">DISTRIBUTOR RECORDS</div>
+          <div id="phud-schools-list"></div>
+          <div class="card" style="background:var(--navy-l);border:2px solid var(--navy);margin-top:12px;">
+            <div class="card-body" style="padding:12px 16px;">
+              <div class="fl" style="margin-bottom:4px;">DISTRIBUTION STATUS</div>
+              <div style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:var(--navy);" id="phud-auto-need">—</div>
+            </div>
+          </div>
+          <div class="fsec">QUANTITY TO DISPATCH</div>
+          <div class="frow">
+            <div class="fg"><label class="fl">PBO ITNs</label><input class="fi" id="phud-pbo" type="number" min="0" placeholder="0" oninput="checkPHUDQty()"></div>
+            <div class="fg"><label class="fl">IG2 ITNs</label><input class="fi" id="phud-ig2" type="number" min="0" placeholder="0" oninput="checkPHUDQty()"></div>
+          </div>
+          <div id="phud-qty-warn" class="ferr" style="margin-bottom:10px;"></div>
+          <div id="phud-consent-section" style="display:none;">
+            <div class="alert info">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/></svg>
+              <div class="alert-txt"><strong>DISTRIBUTOR CONSENT REQUIRED</strong><span>Scan the distributor's QR ID card to confirm they agree with the quantity.</span></div>
+            </div>
+            <div class="scanner-wrap" id="phud-scanner-wrap" style="display:none;"><div class="scanner-overlay-ring"></div><div id="qr-reader3"></div></div>
+            <div style="text-align:center;display:none;" id="phud-stop-btn"><button class="btn red" style="margin-top:10px;" onclick="stopQR('qr-reader3')">STOP</button></div>
+            <button class="btn gold full" id="phud-scan-btn" onclick="startQR('qr-reader3','onDistributorConsentScan')">SCAN DISTRIBUTOR ID — CONSENT</button>
+          </div>
+          <button class="btn navy full" id="phud-proceed-btn" onclick="proceedToDistConsent()" style="margin-top:6px;" disabled>PROCEED TO CONSENT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PHU RECEIVE RETURNS
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-phu-return">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('scr-phu')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title">RECEIVE RETURNS</div><div class="topbar-sub">End-of-day reconciliation</div></div>
+  </div>
+  <div class="content">
+    <div class="alert info">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      <div class="alert-txt"><strong>RETURN RECONCILIATION</strong><span>System calculates expected returns. Verify the physical count against expected amount.</span></div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-hdr orange"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="card-htitle">SELECT DISTRIBUTOR</span></div>
+      <div class="card-body">
+        <div class="fg"><label class="fl">Distributor</label>
+          <select class="fsel" id="ret-dist-sel" onchange="loadReturnInfo()"><option value="">— Select Distributor —</option></select>
+        </div>
+        <div id="ret-info-block" style="display:none;">
+          <div id="ret-reconcile-box"></div>
+          <div class="frow" style="margin-top:12px;">
+            <div class="fg"><label class="fl">PBO Returned</label><input class="fi" type="number" id="ret-pbo" min="0" placeholder="0" oninput="checkReturnMatch()"></div>
+            <div class="fg"><label class="fl">IG2 Returned</label><input class="fi" type="number" id="ret-ig2" min="0" placeholder="0" oninput="checkReturnMatch()"></div>
+          </div>
+          <div id="ret-match-box" style="display:none;border-radius:9px;padding:10px 12px;margin-bottom:10px;font-size:12px;font-weight:600;"></div>
+          <div id="ret-shortage-section" style="display:none;">
+            <div class="acct-box">
+              <div class="acct-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+                ACCOUNTABILITY RECORD
+              </div>
+              <div id="ret-acct-details"></div>
+            </div>
+            <div class="fg"><label class="fl">Shortage Note</label><textarea class="fi" id="ret-shortage-note" rows="2" placeholder="Describe the shortage..."></textarea></div>
+            <button class="btn red full" onclick="scanDistForReturnShortage()">SCAN DISTRIBUTOR ID — ACKNOWLEDGE</button>
+          </div>
+          <button class="btn green full" id="ret-confirm-btn" onclick="confirmReturn()" disabled style="margin-top:6px;">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>CONFIRM RETURN &amp; UPDATE STOCK
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PHU STOCK
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-phu-stock">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('scr-phu')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title">PHU STOCK LEDGER</div></div>
+  </div>
+  <div class="content">
+    <div class="stat-row">
+      <div class="stat-box navy"><div class="stat-n" id="phu-ledger-pbo">0</div><div class="stat-l">PBO</div></div>
+      <div class="stat-box teal"><div class="stat-n" id="phu-ledger-ig2">0</div><div class="stat-l">IG2</div></div>
+      <div class="stat-box gold"><div class="stat-n" id="phu-ledger-total">0</div><div class="stat-l">Total</div></div>
+    </div>
+    <div class="card"><div class="card-body" id="phu-stock-ledger-content" style="padding:10px 16px;"></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DRIVER SCREEN
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-driver">
+  <div class="topbar">
+    <div class="topbar-info"><div class="topbar-title">DRIVER PORTAL</div><div class="topbar-sub" id="driver-user-sub">Loading...</div></div>
+    <div class="topbar-avatar" onclick="doLogout()">DR</div>
+  </div>
+  <div class="content">
+    <div class="dash-hdr">
+      <div class="dash-hdr-wave"></div><div class="dash-hdr-wave2"></div>
+      <div class="dh-role">TRANSPORT DRIVER</div>
+      <div class="dh-name" id="driver-name">—</div>
+      <div class="dh-loc" id="driver-vehicle">—</div>
+    </div>
+    <div style="margin-top:14px;">
+      <div class="alert info">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <div class="alert-txt"><strong>HOW IT WORKS</strong><span>When you arrive at a PHU, staff will scan your QR ID card to pull up your dispatch and verify receipt.</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr navy"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8"/></svg><span class="card-htitle">MY ACTIVE DISPATCHES</span></div>
+      <div class="card-body" id="driver-dispatches"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr blue"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span class="card-htitle">MY QR ID CARD</span></div>
+      <div class="card-body" style="text-align:center;">
+        <div style="font-size:12px;color:var(--text-s);margin-bottom:10px;">Show this to PHU staff to scan</div>
+        <div style="background:var(--navy-l);border:3px solid var(--navy);border-radius:14px;padding:20px;display:inline-block;">
+          <div style="font-family:'Oswald',sans-serif;font-size:36px;font-weight:700;color:var(--navy);letter-spacing:4px;" id="driver-qr-code">—</div>
+          <div style="font-size:11px;color:var(--text-s);margin-top:6px;">QR CODE ID</div>
+        </div>
+        <div style="font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-top:12px;" id="driver-qr-name">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DISTRIBUTOR DASHBOARD
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-distributor">
+  <div class="topbar">
+    <div class="topbar-info"><div class="topbar-title">DISTRIBUTOR</div><div class="topbar-sub" id="dist-user-sub">Loading...</div></div>
+    <div class="topbar-avatar" onclick="doLogout()">DI</div>
+  </div>
+  <div class="content">
+    <div class="dash-hdr">
+      <div class="dash-hdr-wave"></div><div class="dash-hdr-wave2"></div>
+      <div class="dh-role">FIELD DISTRIBUTOR</div>
+      <div class="dh-name" id="dist-name">—</div>
+      <div class="dh-loc" id="dist-area">—</div>
+    </div>
+    <div class="stat-row" style="margin-top:14px;">
+      <div class="stat-box navy"><div class="stat-n" id="di-stat1">0</div><div class="stat-l">Allocated</div></div>
+      <div class="stat-box green"><div class="stat-n" id="di-stat2">0</div><div class="stat-l">Distributed</div></div>
+      <div class="stat-box orange"><div class="stat-n" id="di-stat3">0</div><div class="stat-l">Remaining</div></div>
+      <div class="stat-box teal"><div class="stat-n" id="di-stat4">0%</div><div class="stat-l">Coverage</div></div>
+    </div>
+    <div class="card">
+      <div class="menu-item" onclick="showScreen('scr-dist-schools')">
+        <div class="menu-ico navy"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div class="menu-txt"><div class="menu-title">School Distributions</div><div class="menu-desc">Add schools & record class-by-class distribution</div></div>
+        <div class="menu-arr">›</div>
+      </div>
+      <div class="menu-item" onclick="showScreen('scr-dist-summary')">
+        <div class="menu-ico green"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+        <div class="menu-txt"><div class="menu-title">Daily Summary &amp; Reconciliation</div><div class="menu-desc">View totals and prepare for return</div></div>
+        <div class="menu-arr">›</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DISTRIBUTOR SCHOOLS LIST
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-dist-schools">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('scr-distributor')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title">SCHOOL DISTRIBUTIONS</div><div class="topbar-sub">Add schools from CSV data</div></div>
+  </div>
+  <div class="content" id="dist-schools-content">
+    <div style="text-align:center;color:var(--gray-d);font-size:13px;padding:40px 0;">Loading...</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DISTRIBUTOR — ADD SCHOOL FORM (3 steps)
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-dist-add">
+  <div class="topbar">
+    <button class="topbar-back" onclick="distFormBack()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title">ADD SCHOOL</div><div class="topbar-sub" id="dist-form-step-label">STEP 1 OF 3</div></div>
+  </div>
+  <div class="content">
+
+    <!-- Step progress dots -->
+    <div class="step-bar">
+      <div class="step-dot active" id="dist-step-dot-1"></div>
+      <div class="step-dot" id="dist-step-dot-2"></div>
+      <div class="step-dot" id="dist-step-dot-3"></div>
+    </div>
+
+    <!-- ── STEP 1: SCHOOL LOCATION ── -->
+    <div id="dist-form-step-1">
+      <div class="dist-form-section">
+        <div class="dist-form-hdr"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="dist-form-htitle">SCHOOL LOCATION</span></div>
+        <div class="dist-form-body">
+
+          <div class="cascade-group">
+            <label class="cascade-label">District <span style="color:var(--red)">*</span></label>
+            <select class="fi-cascade" id="ds-district">
+              <option value="">Select District...</option>
+            </select>
+            <div class="cascade-count-badge" id="cnt-district"></div>
+          </div>
+
+          <div class="cascade-group">
+            <label class="cascade-label">Chiefdom</label>
+            <select class="fi-cascade" id="ds-chiefdom" disabled>
+              <option value="">Select Chiefdom...</option>
+            </select>
+            <div class="cascade-count-badge" id="cnt-chiefdom"></div>
+          </div>
+
+          <div class="cascade-group">
+            <label class="cascade-label">Section</label>
+            <select class="fi-cascade" id="ds-section" disabled>
+              <option value="">Select Section...</option>
+            </select>
+            <div class="cascade-count-badge" id="cnt-section"></div>
+          </div>
+
+          <div class="cascade-group">
+            <label class="cascade-label">Health Facility</label>
+            <select class="fi-cascade" id="ds-facility" disabled>
+              <option value="">Select Health Facility...</option>
+            </select>
+            <div class="cascade-count-badge" id="cnt-facility"></div>
+          </div>
+
+          <div class="cascade-group">
+            <label class="cascade-label">Community</label>
+            <select class="fi-cascade" id="ds-community" disabled>
+              <option value="">Select Community...</option>
+            </select>
+            <div class="cascade-count-badge" id="cnt-community"></div>
+          </div>
+
+          <div class="cascade-group">
+            <label class="cascade-label">School <span style="color:var(--red)">*</span></label>
+            <select class="fi-cascade" id="ds-school" disabled>
+              <option value="">Select School...</option>
+            </select>
+            <div class="cascade-count-badge" id="cnt-school_name"></div>
+          </div>
+
+          <div class="cascade-group">
+            <label class="cascade-label">Distributor Name</label>
+            <input class="fi" id="ds-dist-name" type="text" placeholder="Your full name" readonly style="background:#f0f4f8;">
+          </div>
+
+        </div>
+      </div>
+
+      <!-- GPS Capture -->
+      <div class="dist-form-section">
+        <div class="dist-form-hdr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="dist-form-htitle">GPS COORDINATES</span></div>
+        <div class="dist-form-body">
+          <div class="gps-row">
+            <div class="gps-dot loading" id="dist-gps-dot"></div>
+            <div style="flex:1;">
+              <div class="gps-txt" id="dist-gps-txt">Capturing GPS...</div>
+              <div class="gps-coords" id="dist-gps-coords"></div>
+            </div>
+            <button class="gps-retry" onclick="captureDistGPS()">
+              <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2;display:inline;vertical-align:middle;"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+              RETRY
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn navy full" onclick="distFormNext()">
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>NEXT: ENTER ENROLLMENT
+      </button>
+    </div>
+
+    <!-- ── STEP 2: ENROLLMENT ── -->
+    <div id="dist-form-step-2" style="display:none;">
+      <div class="dist-form-section">
+        <div class="dist-form-hdr"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg><span class="dist-form-htitle">CLASS ENROLLMENT</span></div>
+        <div class="dist-form-body">
+          <p style="font-size:12px;color:var(--text-s);margin-bottom:12px;">Enter the number of boys and girls enrolled in each class at this school.</p>
+          <div style="overflow-x:auto;">
+            <table class="enroll-table">
+              <thead>
+                <tr><th>Class</th><th>Boys</th><th>Girls</th><th>Total</th></tr>
+              </thead>
+              <tbody id="enroll-tbody"></tbody>
+              <tfoot>
+                <tr class="enroll-tfoot">
+                  <td>TOTAL</td>
+                  <td id="enr-total-boys">0</td>
+                  <td id="enr-total-girls">0</td>
+                  <td id="enr-total-all">0</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn gray" onclick="distFormBack()">‹ Back</button>
+        <button class="btn navy" onclick="distFormNext()">NEXT: DISTRIBUTION <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: ITN DISTRIBUTION ── -->
+    <div id="dist-form-step-3" style="display:none;">
+      <div class="alert info" style="margin-bottom:12px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <div class="alert-txt">
+          <strong id="dist-school-display">School Name</strong>
+          <span>ITNs allocated: <strong id="dist-avail">0</strong>. Cannot exceed enrollment per class.</span>
+        </div>
+      </div>
+      <div class="dist-form-section">
+        <div class="dist-form-hdr"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/></svg><span class="dist-form-htitle">ITN DISTRIBUTION BY CLASS</span></div>
+        <div class="dist-form-body">
+          <div style="overflow-x:auto;">
+            <table class="enroll-table">
+              <thead>
+                <tr><th>Class</th><th>Boys</th><th>Boys ITN</th><th>Girls</th><th>Girls ITN</th><th>ITN</th></tr>
+              </thead>
+              <tbody id="dist-tbody"></tbody>
+              <tfoot>
+                <tr class="enroll-tfoot">
+                  <td colspan="5">TOTAL ITNs DISTRIBUTED</td>
+                  <td id="dist-total-itn">0</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div class="ferr" id="dist-form-err" style="margin-top:8px;display:none;"></div>
+        </div>
+      </div>
+
+      <!-- Distributor Signature -->
+      <div class="dist-form-section">
+        <div class="dist-form-hdr"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span class="dist-form-htitle">DISTRIBUTOR SIGNATURE</span></div>
+        <div class="dist-form-body">
+          <div class="sig-wrap">
+            <canvas id="dist-sig-canvas"></canvas>
+            <button class="sig-clear" onclick="clearDistSig()">CLEAR SIGNATURE</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn gray" onclick="distFormBack()">‹ Back</button>
+        <button class="btn green" id="dist-save-btn" onclick="saveDistribution()" disabled>
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>SAVE
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DISTRIBUTOR SCHOOL RECORD VIEW
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-dist-record">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('scr-dist-schools')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title" id="school-record-title">School Record</div><div class="topbar-sub">Distribution details</div></div>
+  </div>
+  <div class="content">
+    <div class="card" id="school-record-content"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DISTRIBUTOR SUMMARY
+══════════════════════════════════════════ -->
+<div class="screen" id="scr-dist-summary">
+  <div class="topbar">
+    <button class="topbar-back" onclick="showScreen('scr-distributor')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div class="topbar-info"><div class="topbar-title">DAILY SUMMARY</div><div class="topbar-sub">Reconciliation & return</div></div>
+  </div>
+  <div class="content">
+    <div class="stat-row">
+      <div class="stat-box navy"><div class="stat-n" id="ds-given">0</div><div class="stat-l">Given</div></div>
+      <div class="stat-box green"><div class="stat-n" id="ds-dist">0</div><div class="stat-l">Distributed</div></div>
+      <div class="stat-box orange"><div class="stat-n" id="ds-remain">0</div><div class="stat-l">Must Return</div></div>
+    </div>
+    <div class="card" id="dist-summary-detail">
+      <div class="card-body"><div style="text-align:center;color:var(--gray-d);padding:20px 0;font-size:13px;">Complete distribution to see summary</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     NOTIFICATION & HIDDEN QR READER
+══════════════════════════════════════════ -->
+<div class="notif" id="notif"></div>
+<div id="qr-reader4" style="display:none;"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
