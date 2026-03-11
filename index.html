@@ -259,6 +259,8 @@
             border: 3px solid var(--gold);
             display: inline-block;
             margin: 10px auto;
+            min-height: 230px;
+            min-width: 230px;
         }
         
         .qr-info {
@@ -305,7 +307,7 @@
             border: 3px solid var(--gold);
         }
         
-        #qrVideo {
+        #qrVideo, #receiptScanVideo {
             width: 100%;
             display: block;
         }
@@ -575,6 +577,18 @@
             font-size: 3rem;
             margin-bottom: 10px;
         }
+        
+        /* Vehicle plate preview */
+        .plate-preview {
+            background: var(--navy);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.5rem;
+            letter-spacing: 0.1em;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -743,25 +757,19 @@
                     </div>
                 </div>
                 
-                <!-- Vehicle Plate (Manual Entry) -->
+                <!-- Vehicle Plate (Required - 3 letters + 3 numbers) -->
                 <div class="grid-2" style="margin-top:15px;">
                     <div>
-                        <label class="label">VEHICLE PLATE (OPTIONAL)</label>
-                        <input class="input" id="vehiclePlate" placeholder="e.g. ABC-123">
+                        <label class="label">VEHICLE LETTERS (3) <span style="color:var(--red);">*</span></label>
+                        <input class="input" id="vehL" maxlength="3" placeholder="ABC" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z]/g,''); updatePlatePreview()">
                     </div>
                     <div>
-                        <label class="label">VEHICLE TYPE</label>
-                        <select class="select" id="vehicleType">
-                            <option value="">—Select—</option>
-                            <option value="Motorcycle">Motorcycle</option>
-                            <option value="Pickup">Pickup</option>
-                            <option value="Truck">Truck</option>
-                            <option value="SUV">SUV</option>
-                            <option value="Bicycle">Bicycle</option>
-                            <option value="Other">Other</option>
-                        </select>
+                        <label class="label">VEHICLE NUMBERS (3) <span style="color:var(--red);">*</span></label>
+                        <input class="input" id="vehN" maxlength="3" placeholder="123" oninput="this.value=this.value.replace(/[^0-9]/g,''); updatePlatePreview()">
                     </div>
                 </div>
+                
+                <div class="plate-preview" id="platePreview">— — —</div>
                 
                 <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:20px;">
                     <button class="btn btn-green" onclick="saveAndSyncDispatch()" id="saveBtn" disabled>✓ GENERATE QR & SAVE</button>
@@ -1117,6 +1125,13 @@
         }
     });
 
+    // ==================== VEHICLE PLATE FUNCTIONS ====================
+    window.updatePlatePreview = function() {
+        const letters = document.getElementById('vehL').value.padEnd(3, '—');
+        const numbers = document.getElementById('vehN').value.padEnd(3, '—');
+        document.getElementById('platePreview').textContent = `${letters}-${numbers}`;
+    };
+
     // ==================== DRIVER VERIFICATION ====================
     document.getElementById('startScanBtn').addEventListener('click', startQRScan);
     document.getElementById('stopScanBtn').addEventListener('click', stopQR);
@@ -1252,12 +1267,20 @@
             return;
         }
         
-        // Get vehicle info
-        const vehiclePlate = document.getElementById('vehiclePlate').value.trim();
-        const vehicleType = document.getElementById('vehicleType').value;
-        const vehicleInfo = vehiclePlate ? 
-            (vehicleType ? `${vehiclePlate} (${vehicleType})` : vehiclePlate) : 
-            (vehicleType || 'Not specified');
+        // Validate vehicle plate
+        const vehL = document.getElementById('vehL').value.trim();
+        const vehN = document.getElementById('vehN').value.trim();
+        
+        if (vehL.length !== 3) {
+            showToast('Vehicle letters must be exactly 3 characters', 'error');
+            return;
+        }
+        if (vehN.length !== 3) {
+            showToast('Vehicle numbers must be exactly 3 digits', 'error');
+            return;
+        }
+        
+        const vehiclePlate = `${vehL.toUpperCase()}-${vehN}`;
         
         // Get district from chiefdom
         let district = '';
@@ -1283,7 +1306,7 @@
             driverName: verifiedDriver.full_name,
             driverUsername: verifiedDriver.username,
             driverPhone: verifiedDriver.phone || 'N/A',
-            vehicleInfo: vehicleInfo,
+            vehiclePlate: vehiclePlate,
             staffName: currentStaff.full_name,
             staffUsername: currentStaff.username,
             staffDistrict: currentStaff.district,
@@ -1336,7 +1359,7 @@
     // Generate QR Code with all delivery information
     async function generateQRCode(record) {
         const qrElement = document.getElementById('qrcode');
-        qrElement.innerHTML = '';
+        qrElement.innerHTML = ''; // Clear previous QR
         
         // Create comprehensive QR data for PHU staff
         const qrData = JSON.stringify({
@@ -1348,33 +1371,36 @@
             district: record.district,
             chiefdom: record.chiefdom,
             phu: record.phu,
-            items: {
-                ig2: record.ig2,
-                pbo: record.pbo,
-                total: record.total
-            },
-            driver: {
-                name: record.driverName,
-                username: record.driverUsername,
-                phone: record.driverPhone
-            },
-            vehicle: record.vehicleInfo,
+            ig2: record.ig2,
+            pbo: record.pbo,
+            total: record.total,
+            driverName: record.driverName,
+            driverUsername: record.driverUsername,
+            driverPhone: record.driverPhone,
+            vehiclePlate: record.vehiclePlate,
             dmsStaff: record.staffName,
             timestamp: record.timestamp,
-            verification: {
-                required: true,
-                expires: new Date(Date.now() + 7*24*60*60*1000).toISOString() // 7 days validity
-            }
+            verificationCode: record.id.slice(-6)
         });
         
         try {
-            await QRCode.toCanvas(qrElement, qrData, { 
-                width: 200,
-                margin: 2,
-                color: {
-                    dark: '#0B3B5C',
-                    light: '#FFFFFF'
-                }
+            // Use Promise-based approach to ensure QR is generated
+            await new Promise((resolve, reject) => {
+                QRCode.toCanvas(qrElement, qrData, { 
+                    width: 200,
+                    margin: 2,
+                    color: {
+                        dark: '#0B3B5C',
+                        light: '#FFFFFF'
+                    }
+                }, function(error, canvas) {
+                    if (error) {
+                        console.error('QR Error:', error);
+                        reject(error);
+                    } else {
+                        resolve(canvas);
+                    }
+                });
             });
             
             // Display delivery receipt info
@@ -1382,9 +1408,9 @@
                 <div class="qr-info-item"><span>Dispatch ID:</span> <strong>${record.id}</strong></div>
                 <div class="qr-info-item"><span>Date:</span> ${record.date} ${record.time}</div>
                 <div class="qr-info-item"><span>Destination:</span> ${record.district} → ${record.chiefdom} → ${record.phu}</div>
-                <div class="qr-info-item"><span>ITNs Received:</span> IG2:${record.ig2} | PBO:${record.pbo} | Total:${record.total}</div>
-                <div class="qr-info-item"><span>Delivered By:</span> ${record.driverName} (${record.driverPhone})</div>
-                <div class="qr-info-item"><span>Vehicle:</span> ${record.vehicleInfo}</div>
+                <div class="qr-info-item"><span>ITNs:</span> IG2:${record.ig2} | PBO:${record.pbo} | Total:${record.total}</div>
+                <div class="qr-info-item"><span>Driver:</span> ${record.driverName} (${record.driverPhone})</div>
+                <div class="qr-info-item"><span>Vehicle:</span> ${record.vehiclePlate}</div>
                 <div class="qr-info-item"><span>DMS Staff:</span> ${record.staffName}</div>
                 <div class="qr-info-item"><span>Verification Code:</span> <strong>${record.id.slice(-6)}</strong></div>
             `;
@@ -1392,14 +1418,19 @@
             
         } catch (error) {
             console.error('QR Generation Error:', error);
-            showToast('QR generation failed', 'error');
+            showToast('QR generation failed: ' + error.message, 'error');
+            // Fallback - show error in QR element
+            qrElement.innerHTML = '<div style="color:red; padding:20px;">QR Generation Failed</div>';
         }
     }
 
     // Download QR as PNG
     window.downloadQR = function() {
         const canvas = document.querySelector('#qrcode canvas');
-        if (!canvas) return;
+        if (!canvas) {
+            showToast('No QR code to download', 'error');
+            return;
+        }
         
         const link = document.createElement('a');
         link.download = `delivery-${document.getElementById('dispId').value}.png`;
@@ -1409,7 +1440,12 @@
 
     // Print receipt
     window.printQR = function() {
-        const qrCanvas = document.querySelector('#qrcode canvas');
+        const canvas = document.querySelector('#qrcode canvas');
+        if (!canvas) {
+            showToast('No QR code to print', 'error');
+            return;
+        }
+        
         const qrInfo = document.getElementById('qrInfoContent').innerHTML;
         
         const printWindow = window.open('', '_blank');
@@ -1423,6 +1459,7 @@
                     .header { text-align: center; margin-bottom: 20px; }
                     .qr { text-align: center; margin: 20px 0; }
                     .info { border-top: 2px solid #E1A534; padding: 10px; }
+                    .info-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #ccc; }
                     .footer { margin-top: 30px; font-size: 0.8rem; text-align: center; }
                 </style>
             </head>
@@ -1433,10 +1470,10 @@
                         <h3>ITN Delivery Receipt</h3>
                     </div>
                     <div class="qr">
-                        <img src="${qrCanvas.toDataURL()}" style="width:200px;">
+                        <img src="${canvas.toDataURL()}" style="width:200px;">
                     </div>
                     <div class="info">
-                        ${qrInfo.replace(/<span/g, '<div style="margin:5px 0;"><span').replace(/<\/div>/g, '</div></div>')}
+                        ${qrInfo.replace(/qr-info-item/g, 'info-item')}
                     </div>
                     <div class="footer">
                         <p>This QR code serves as proof of delivery.<br>Scan to verify authenticity.</p>
@@ -1465,7 +1502,8 @@
             date: record.date,
             phu: record.phu,
             total: record.total,
-            driver: record.driverName
+            driver: record.driverName,
+            vehicle: record.vehiclePlate
         });
         
         QRCode.toCanvas(modalQR, qrData, { width: 200 }, function(error) {
@@ -1478,6 +1516,7 @@
             <div class="qr-info-item"><span>PHU:</span> ${record.phu}</div>
             <div class="qr-info-item"><span>ITNs:</span> ${record.total}</div>
             <div class="qr-info-item"><span>Driver:</span> ${record.driverName}</div>
+            <div class="qr-info-item"><span>Vehicle:</span> ${record.vehiclePlate}</div>
         `;
     };
 
@@ -1562,9 +1601,11 @@
             <div class="qr-info-item"><span>Dispatch ID:</span> <strong>${data.dispatchId}</strong></div>
             <div class="qr-info-item"><span>Date:</span> ${data.date} ${data.time || ''}</div>
             <div class="qr-info-item"><span>PHU:</span> ${data.phu}</div>
-            <div class="qr-info-item"><span>ITNs Received:</span> ${data.total} (IG2:${data.items?.ig2 || 0}, PBO:${data.items?.pbo || 0})</div>
-            <div class="qr-info-item"><span>Driver:</span> ${data.driver?.name || data.driver}</div>
+            <div class="qr-info-item"><span>ITNs:</span> IG2:${data.ig2 || 0} | PBO:${data.pbo || 0} | Total:${data.total}</div>
+            <div class="qr-info-item"><span>Driver:</span> ${data.driverName}</div>
+            <div class="qr-info-item"><span>Vehicle:</span> ${data.vehiclePlate}</div>
             <div class="qr-info-item"><span>Status:</span> <strong style="color:${record ? 'var(--green)' : 'var(--red)'};">${status}</strong></div>
+            <div class="qr-info-item"><span>Verification Code:</span> <strong>${data.verificationCode || data.dispatchId.slice(-6)}</strong></div>
         `;
         
         document.getElementById('verificationTimestamp').textContent = 
@@ -1596,16 +1637,11 @@
                 driverName: record.driverName,
                 driverUsername: record.driverUsername,
                 driverPhone: record.driverPhone,
-                vehicleInfo: record.vehicleInfo,
+                vehiclePlate: record.vehiclePlate,
                 staffName: record.staffName,
                 staffUsername: record.staffUsername,
                 staffDistrict: record.staffDistrict,
-                qrGenerated: true,
-                qrData: JSON.stringify({
-                    id: record.id,
-                    phu: record.phu,
-                    total: record.total
-                })
+                qrGenerated: true
             };
             
             // Send to Google Sheets webhook
@@ -1740,10 +1776,11 @@
         document.getElementById('phuSel').disabled = true;
         document.getElementById('ig2').value = '0';
         document.getElementById('pbo').value = '0';
-        document.getElementById('vehiclePlate').value = '';
-        document.getElementById('vehicleType').value = '';
+        document.getElementById('vehL').value = '';
+        document.getElementById('vehN').value = '';
         document.getElementById('totalItnSpan').textContent = '0';
         document.getElementById('phuStatusWarning').style.display = 'none';
+        document.getElementById('platePreview').textContent = '— — —';
         
         initDispatch();
     };
@@ -1861,7 +1898,8 @@
                                 <div style="font-size:0.65rem; margin-top:5px;">
                                     ITNs: ${dispatch.total}<br>
                                     Driver: ${dispatch.driverName}<br>
-                                    QR: <button class="btn" style="padding:2px 5px; font-size:0.6rem;" onclick="showQRModal(${JSON.stringify(dispatch).replace(/"/g, '&quot;')})">VIEW</button>
+                                    Vehicle: ${dispatch.vehiclePlate}<br>
+                                    <button class="btn" style="padding:2px 5px; font-size:0.6rem;" onclick='showQRModal(${JSON.stringify(dispatch).replace(/'/g, "\\'")})'>VIEW QR</button>
                                 </div>
                             ` : ''}
                         </div>
@@ -1897,9 +1935,9 @@
                 <td>${r.pbo}</td>
                 <td><strong>${r.total}</strong></td>
                 <td>${r.driverName}</td>
-                <td>${r.vehicleInfo || 'N/A'}</td>
+                <td>${r.vehiclePlate || 'N/A'}</td>
                 <td>
-                    <button class="btn" style="padding:4px 8px; font-size:0.7rem;" onclick="showQRModal(${JSON.stringify(r).replace(/"/g, '&quot;')})">
+                    <button class="btn" style="padding:4px 8px; font-size:0.7rem;" onclick='showQRModal(${JSON.stringify(r).replace(/'/g, "\\'")})'>
                         📱 QR
                     </button>
                 </td>
